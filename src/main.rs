@@ -84,54 +84,39 @@ fn count_ones_memo_2(num: NumType) -> u8 {
     let num = num as u64;
     //note, numtype can only be up to u32
     //literal dark voodoo
-    let pows = [1, 2, 4, 8, 16];
     let masks = [0x55555555, 0x33333333, 0x0f0f0f0f, 0x00ff00ff, 0x0000ffff];
     let mut ret = num - ((num >> 1) & masks[0]);
-    ret = ((ret >> pows[1]) & masks[1]) + (ret & masks[1]);
-    ret = ((ret >> pows[2]) + ret) & masks[2]; 
-    ret = ((ret >> pows[3]) + ret) & masks[3]; 
-    ret = ((ret >> pows[4]) + ret) & masks[4];
+    ret = ((ret >> (1 << 1)) & masks[1]) + (ret & masks[1]);
+    ret = ((ret >> (1 << 2)) + ret) & masks[2]; 
+    ret = ((ret >> (1 << 3)) + ret) & masks[3]; 
+    ret = ((ret >> (1 << 4)) + ret) & masks[4];
     ret as u8
+}
+
+fn measure_execution_time<F, NumType>(nums: &[NumType], count_fn: F) -> std::time::Duration
+where
+    F: Fn(NumType) -> u8,
+    NumType: Copy,
+{
+    let start = std::time::Instant::now();
+    for &i in nums {
+        black_box(count_fn(i));
+    }
+    start.elapsed()
 }
 
 
 fn run_vec(nums: &[NumType]) {
-    let start = std::time::Instant::now();
-    for i in nums {
-        black_box(count_ones_inplace_0(*i));
-    }
-    let time_count_inplace = start.elapsed();
-    let start = std::time::Instant::now();
-    for i in nums {
-        black_box(count_ones_inplace_1(*i));
-    }
-    let time_count_inplace_1 = start.elapsed();
-    let start = std::time::Instant::now();
-    for i in nums {
-        black_box(count_ones_inplace_2(*i));
-    }
-    let time_count_inplace_2 = start.elapsed();
-    let start = std::time::Instant::now();
-    for i in nums {
-        black_box(count_ones_inplace_3(*i));
-    }
-    let time_count_inplace_3 = start.elapsed();
-    let start = std::time::Instant::now();
-    for i in nums {
-        black_box(count_ones_memo(*i));
-    }
-    let time_count_memo = start.elapsed();
-    let start = std::time::Instant::now();
-    for i in nums {
-        black_box(count_ones_memo_1(*i));
-    }
-    let time_count_memo_1 = start.elapsed();
-    let start = std::time::Instant::now();
-    for i in nums {
-        black_box(count_ones_memo_2(*i));
-    }
-    let time_count_memo_2 = start.elapsed();
-    println!("count_inplace: {time_count_inplace:?}, count_inplace_1: {time_count_inplace_1:?}, count_inplace_2: {time_count_inplace_2:?}, count_inplace_3: {time_count_inplace_3:?}, count_memo: {time_count_memo:?}, count_ones_memo_1: {time_count_memo_1:?}, count_ones_memo_2: {time_count_memo_2:?}")
+    let time_count_inplace = measure_execution_time(nums, count_ones_inplace_0);
+    let time_count_inplace_1 = measure_execution_time(nums, count_ones_inplace_1);
+    let time_count_inplace_2 = measure_execution_time(nums, count_ones_inplace_2);
+    let time_count_inplace_3 = measure_execution_time(nums, count_ones_inplace_3);
+    let time_count_memo = measure_execution_time(nums, count_ones_memo);
+    let time_count_memo_1 = measure_execution_time(nums, count_ones_memo_1);
+    let time_count_memo_2 = measure_execution_time(nums, count_ones_memo_2);
+    
+    println!("count_inplace: {:?}, count_inplace_1: {:?}, count_inplace_2: {:?}, count_inplace_3: {:?}, count_memo: {:?}, count_ones_memo_1: {:?}, count_ones_memo_2: {:?}",
+             time_count_inplace, time_count_inplace_1, time_count_inplace_2, time_count_inplace_3, time_count_memo, time_count_memo_1, time_count_memo_2);
 }
 
 lazy_static! {
