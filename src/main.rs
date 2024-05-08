@@ -3,9 +3,9 @@ use rand::Rng;
 use std::{hint::black_box, sync::Once, time::Instant};
 
 //if you try to run with with a u64, you will crash, better avoid...
-type NumType = u16;
-const DIGIT_COUNT: usize = 16;
-const VEC_SIZE: usize = 1000000;
+type NumType = u32;
+const DIGIT_COUNT: usize = 32;
+const VEC_SIZE: usize = 100000000;
 
 pub fn get_rand_arr(length: usize) -> Vec<NumType> {
     //returns an array of length N filled with random numbers
@@ -15,6 +15,10 @@ pub fn get_rand_arr(length: usize) -> Vec<NumType> {
         vec.push(rng.gen::<NumType>() as NumType);
     }
     vec
+}
+
+fn inbuilt_count_ones(num: NumType) -> u8 {
+    num.count_ones() as u8
 }
 
 fn count_ones_inplace_0(num: NumType) -> u8 {
@@ -114,9 +118,10 @@ fn run_vec(nums: &[NumType]) {
     let time_count_memo = measure_execution_time(nums, count_ones_memo);
     let time_count_memo_1 = measure_execution_time(nums, count_ones_memo_1);
     let time_count_memo_2 = measure_execution_time(nums, count_ones_memo_2);
+    let time_inbuilt = measure_execution_time(nums, inbuilt_count_ones);
     
-    println!("count_inplace: {:?}, count_inplace_1: {:?}, count_inplace_2: {:?}, count_inplace_3: {:?}, count_memo: {:?}, count_ones_memo_1: {:?}, count_ones_memo_2: {:?}",
-             time_count_inplace, time_count_inplace_1, time_count_inplace_2, time_count_inplace_3, time_count_memo, time_count_memo_1, time_count_memo_2);
+    println!("count_inplace: {:?}, count_inplace_1: {:?}, count_inplace_2: {:?}, count_inplace_3: {:?}, count_memo: {:?}, count_ones_memo_1: {:?}, count_ones_memo_2: {:?}, inbuilt: {:?}",
+             time_count_inplace, time_count_inplace_1, time_count_inplace_2, time_count_inplace_3, time_count_memo, time_count_memo_1, time_count_memo_2, time_inbuilt);
 }
 
 lazy_static! {
