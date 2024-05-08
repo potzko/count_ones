@@ -5,7 +5,7 @@ use std::{hint::black_box, sync::Once, time::Instant};
 //if you try to run with with a u64, you will crash, better avoid...
 type NumType = u16;
 const DIGIT_COUNT: usize = 16;
-const VEC_SIZE: usize = 1000000000;
+const VEC_SIZE: usize = 1000000;
 
 pub fn get_rand_arr(length: usize) -> Vec<NumType> {
     //returns an array of length N filled with random numbers
@@ -54,9 +54,9 @@ fn count_ones_inplace_3(num: NumType) -> u8 {
     //note, numtype can only be up to u32
     //literal dark voodoo
     let num = num as u64;
-    let mut ret = ((num & 0xfff) * 0x1001001001001_u64 & 0x84210842108421_u64) % 0x1f;
-    ret += (((num & 0xfff000) >> 12) * 0x1001001001001_u64 & 0x84210842108421_u64) % 0x1f;
-    ret += ((num >> 24) * 0x1001001001001_u64 & 0x84210842108421_u64) % 0x1f;
+    let mut ret = (((num & 0xfff) * 0x1001001001001_u64) & 0x84210842108421_u64) % 0x1f;
+    ret += ((((num & 0xfff000) >> 12) * 0x1001001001001_u64) & 0x84210842108421_u64) % 0x1f;
+    ret += (((num >> 24) * 0x1001001001001_u64) & 0x84210842108421_u64) % 0x1f;
     ret as u8
 }
 
