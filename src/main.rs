@@ -5,7 +5,7 @@ use std::{hint::black_box, sync::Once, time::Instant};
 //if you try to run with with a u64, you will crash, better avoid...
 type NumType = u16;
 const DIGIT_COUNT: usize = 16;
-const VEC_SIZE: usize = 500000000;
+const VEC_SIZE: usize = 1000000000;
 
 pub fn get_rand_arr(length: usize) -> Vec<NumType> {
     //returns an array of length N filled with random numbers
@@ -49,6 +49,17 @@ fn count_ones_inplace_2(num: NumType) -> u8 {
     ret
 }
 
+//https://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetKernighan
+fn count_ones_inplace_3(num: NumType) -> u8 {
+    //note, numtype can only be up to u32
+    //literal dark voodoo
+    let num = num as u64;
+    let mut ret = ((num & 0xfff) * 0x1001001001001_u64 & 0x84210842108421_u64) % 0x1f;
+    ret += (((num & 0xfff000) >> 12) * 0x1001001001001_u64 & 0x84210842108421_u64) % 0x1f;
+    ret += ((num >> 24) * 0x1001001001001_u64 & 0x84210842108421_u64) % 0x1f;
+    ret as u8
+}
+
 fn count_ones_memo(num: NumType) -> u8 {
     //array the size of the whole number type
     ARR[num as usize]
@@ -68,6 +79,22 @@ fn count_ones_memo_1(num: NumType) -> u8 {
     ret
 }
 
+//https://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetKernighan
+fn count_ones_memo_2(num: NumType) -> u8 {
+    let num = num as u64;
+    //note, numtype can only be up to u32
+    //literal dark voodoo
+    let pows = [1, 2, 4, 8, 16];
+    let masks = [0x55555555, 0x33333333, 0x0f0f0f0f, 0x00ff00ff, 0x0000ffff];
+    let mut ret = num - ((num >> 1) & masks[0]);
+    ret = ((ret >> pows[1]) & masks[1]) + (ret & masks[1]);
+    ret = ((ret >> pows[2]) + ret) & masks[2]; 
+    ret = ((ret >> pows[3]) + ret) & masks[3]; 
+    ret = ((ret >> pows[4]) + ret) & masks[4];
+    ret as u8
+}
+
+
 fn run_vec(nums: &[NumType]) {
     let start = std::time::Instant::now();
     for i in nums {
@@ -86,6 +113,11 @@ fn run_vec(nums: &[NumType]) {
     let time_count_inplace_2 = start.elapsed();
     let start = std::time::Instant::now();
     for i in nums {
+        black_box(count_ones_inplace_3(*i));
+    }
+    let time_count_inplace_3 = start.elapsed();
+    let start = std::time::Instant::now();
+    for i in nums {
         black_box(count_ones_memo(*i));
     }
     let time_count_memo = start.elapsed();
@@ -94,7 +126,12 @@ fn run_vec(nums: &[NumType]) {
         black_box(count_ones_memo_1(*i));
     }
     let time_count_memo_1 = start.elapsed();
-    println!("count_inplace: {time_count_inplace:?}, count_inplace_1: {time_count_inplace_1:?}, count_inplace_2: {time_count_inplace_2:?}, count_memo: {time_count_memo:?}, count_ones_memo_1: {time_count_memo_1:?}")
+    let start = std::time::Instant::now();
+    for i in nums {
+        black_box(count_ones_memo_2(*i));
+    }
+    let time_count_memo_2 = start.elapsed();
+    println!("count_inplace: {time_count_inplace:?}, count_inplace_1: {time_count_inplace_1:?}, count_inplace_2: {time_count_inplace_2:?}, count_inplace_3: {time_count_inplace_3:?}, count_memo: {time_count_memo:?}, count_ones_memo_1: {time_count_memo_1:?}, count_ones_memo_2: {time_count_memo_2:?}")
 }
 
 lazy_static! {
@@ -136,6 +173,7 @@ fn main() {
     assert!(ans == tmp.iter().map(|i| count_ones_inplace_2(*i) as usize).sum());
     assert!(ans == tmp.iter().map(|i| count_ones_memo(*i) as usize).sum());
     assert!(ans == tmp.iter().map(|i| count_ones_memo_1(*i) as usize).sum());
+    assert!(ans == tmp.iter().map(|i| count_ones_memo_2(*i) as usize).sum());
 
     let arr: Vec<NumType> = get_rand_arr(VEC_SIZE);
     println!("finished array gen");
