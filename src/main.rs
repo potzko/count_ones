@@ -1,6 +1,6 @@
 use lazy_static::lazy_static;
 use rand::Rng;
-use std::{hint::black_box, sync::Once, time::Instant};
+use std::{hint::black_box, time::Instant};
 
 //if you try to run with with a u64, you will crash, better avoid...
 type NumType = u32;
@@ -91,8 +91,8 @@ fn count_ones_memo_2(num: NumType) -> u8 {
     let masks = [0x55555555, 0x33333333, 0x0f0f0f0f, 0x00ff00ff, 0x0000ffff];
     let mut ret = num - ((num >> 1) & masks[0]);
     ret = ((ret >> (1 << 1)) & masks[1]) + (ret & masks[1]);
-    ret = ((ret >> (1 << 2)) + ret) & masks[2]; 
-    ret = ((ret >> (1 << 3)) + ret) & masks[3]; 
+    ret = ((ret >> (1 << 2)) + ret) & masks[2];
+    ret = ((ret >> (1 << 3)) + ret) & masks[3];
     ret = ((ret >> (1 << 4)) + ret) & masks[4];
     ret as u8
 }
@@ -109,7 +109,6 @@ where
     start.elapsed()
 }
 
-
 fn run_vec(nums: &[NumType]) {
     let time_count_inplace = measure_execution_time(nums, count_ones_inplace_0);
     let time_count_inplace_1 = measure_execution_time(nums, count_ones_inplace_1);
@@ -119,7 +118,7 @@ fn run_vec(nums: &[NumType]) {
     let time_count_memo_1 = measure_execution_time(nums, count_ones_memo_1);
     let time_count_memo_2 = measure_execution_time(nums, count_ones_memo_2);
     let time_inbuilt = measure_execution_time(nums, inbuilt_count_ones);
-    
+
     println!("count_inplace: {:?}, count_inplace_1: {:?}, count_inplace_2: {:?}, count_inplace_3: {:?}, count_memo: {:?}, count_ones_memo_1: {:?}, count_ones_memo_2: {:?}, inbuilt: {:?}",
              time_count_inplace, time_count_inplace_1, time_count_inplace_2, time_count_inplace_3, time_count_memo, time_count_memo_1, time_count_memo_2, time_inbuilt);
 }
@@ -129,12 +128,9 @@ lazy_static! {
         println!("started init");
         let start = Instant::now();
         let mut arr = Vec::with_capacity(1 << DIGIT_COUNT);
-        let once = Once::new();
-        once.call_once(|| {
-            for i in 0..(1_u128 << (DIGIT_COUNT)) {
-                arr.push(count_ones_inplace_0(i as NumType));
-            }
-        });
+        for i in 0..(1_u128 << (DIGIT_COUNT)) {
+            arr.push(count_ones_inplace_0(i as NumType));
+        }
         println!("finished init, {:?}", start.elapsed());
         arr
     };
@@ -142,12 +138,9 @@ lazy_static! {
         println!("started init");
         let start = Instant::now();
         let mut arr = [0; 256];
-        let once = Once::new();
-        once.call_once(|| {
-            for i in 0..(1_u128 << (8)) {
-                arr[i as usize] = count_ones_inplace_0(i as NumType);
-            }
-        });
+        for i in 0..(1_u128 << (8)) {
+            arr[i as usize] = count_ones_inplace_0(i as NumType);
+        }
         println!("finished init, {:?}", start.elapsed());
         arr
     };
@@ -173,7 +166,9 @@ fn main() {
     println!("finished array gen");
     println!("consecutive array:");
     run_vec(&arr);
-    let arr: Vec<NumType> = (0..VEC_SIZE).map(|i| NumType::MAX - (i % 255) as NumType).collect();
+    let arr: Vec<NumType> = (0..VEC_SIZE)
+        .map(|i| NumType::MAX - (i % 255) as NumType)
+        .collect();
     println!("finished array gen");
     println!("large numbers:");
     run_vec(&arr);
