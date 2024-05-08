@@ -5,7 +5,7 @@ use std::{hint::black_box, sync::Once, time::Instant};
 //if you try to run with with a u64, you will crash, better avoid...
 type NumType = u16;
 const DIGIT_COUNT: usize = 16;
-const VEC_SIZE: usize = 100000000;
+const VEC_SIZE: usize = 500000000;
 
 pub fn get_rand_arr(length: usize) -> Vec<NumType> {
     //returns an array of length N filled with random numbers
@@ -143,10 +143,14 @@ fn main() {
     run_vec(&arr);
     let arr: Vec<NumType> = (0..VEC_SIZE).map(|i| i as NumType).collect();
     println!("finished array gen");
-    println!("consecutive array, small:");
+    println!("consecutive array:");
     run_vec(&arr);
-    let arr: Vec<NumType> = ((NumType::MAX - VEC_SIZE as NumType)..NumType::MAX).map(|i| i as NumType).collect();
+    let arr: Vec<NumType> = (0..VEC_SIZE).map(|i| NumType::MAX - (i % 255) as NumType).collect();
     println!("finished array gen");
-    println!("consecutive array, large:");
+    println!("large numbers:");
+    run_vec(&arr);
+    let arr: Vec<NumType> = (0..VEC_SIZE).map(|i| (i % 255) as NumType).collect();
+    println!("finished array gen");
+    println!("small numbers:");
     run_vec(&arr);
 }
