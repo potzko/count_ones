@@ -37,10 +37,12 @@ const ARR_SMALL: [u8; 1 << 8] = {
     arr
 };
 
+#[no_mangle]
 fn inbuilt_count_ones(num: NumType) -> u8 {
     num.count_ones() as u8
 }
 
+#[no_mangle]
 fn count_ones_inplace_naive(num: NumType) -> u8 {
     //naive implemantation
     let mut num = num;
@@ -74,6 +76,7 @@ fn count_ones_inplace_1(num: NumType) -> u8 {
     ret
 }
 
+#[no_mangle]
 fn count_ones_inplace_2(num: NumType) -> u8 {
     //small trick, num &= num - 1 will always remove the first one in the number
     //we do this as many times as there are ones
@@ -98,6 +101,7 @@ fn count_ones_inplace_3(num: NumType) -> u8 {
 }
 
 //implemented based on the version on https://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetKernighan
+#[no_mangle]
 fn count_ones_inplace_4(num: NumType) -> u8 {
     let num = num as u64;
     //note, numtype can only be up to u32
@@ -132,7 +136,7 @@ fn count_ones_memo_1(num: NumType) -> u8 {
 
 fn count_ones_memo_2(num: NumType) -> u8 {
     //note, numtype can only be up to u64
-    //count_ones_memo_1 with some nice unrolling, might be faster?
+    //count_ones_memo_1 with some nice unrolling, might be faster because im showing transative addition where as .sum() can't allways use it?
     let num = (num as u64).to_ne_bytes();
     let a = count_ones_memo_small(num[0]) + count_ones_memo_small(num[1]);
     let b = count_ones_memo_small(num[2]) + count_ones_memo_small(num[3]);
@@ -182,8 +186,6 @@ lazy_static! {
     //init lookup arrays, the arrays[i] = amount_of_set_bits(i)
     //ARR can be large (around 4 billion for u32 for example) so we save it to the heap
     static ref ARR: Vec<u8> = {
-        println!("started init");
-        let start = Instant::now();
         let mut arr = vec![0; 1 << (DIGIT_COUNT)];
         let mut next_pow = 2;
         arr[0] = 0;
@@ -194,13 +196,12 @@ lazy_static! {
             }
             next_pow <<= 1;
         }
-        println!("finished init, {:?}", start.elapsed());
         arr
     };
 }
 
 //this is the same array as the const one, we just messure the time to create it in here.
-fn mesure_time_to_create_mine() -> Vec<u8> {
+fn mesure_time_to_create_memoization_array_mine() -> Vec<u8> {
     let mut arr = vec![0; 1 << (DIGIT_COUNT)];
     println!("started init");
     let start = Instant::now();
@@ -217,7 +218,7 @@ fn mesure_time_to_create_mine() -> Vec<u8> {
     arr
 }
 
-fn mesure_time_to_create_map_inbuilt() -> Vec<u8> {
+fn mesure_time_to_create_memoization_array_inbuilt() -> Vec<u8> {
     let mut arr: Vec<u8> = vec![0; 1 << (DIGIT_COUNT)];
     println!("started init");
     let start = Instant::now();
@@ -230,27 +231,23 @@ fn mesure_time_to_create_map_inbuilt() -> Vec<u8> {
 
 fn main() {
     println!("started checking mine");
-    black_box(mesure_time_to_create_mine());
+    black_box(mesure_time_to_create_memoization_array_mine());
     println!("started checking std");
-    black_box(mesure_time_to_create_map_inbuilt());
+    black_box(mesure_time_to_create_memoization_array_inbuilt());
 
     let tmp = get_rand_arr(100);
     let ans = tmp
         .iter()
-        .map(|i| count_ones_inplace_0(*i) as usize)
+        .map(|i| inbuilt_count_ones(*i) as usize)
         .sum::<usize>();
+
     assert!(
         ans == tmp
             .iter()
             .map(|i| count_ones_inplace_naive(*i) as usize)
             .sum()
     );
-    assert!(
-        ans == tmp
-            .iter()
-            .map(|i| count_ones_inplace_naive(*i) as usize)
-            .sum()
-    );
+    assert!(ans == tmp.iter().map(|i| count_ones_inplace_0(*i) as usize).sum());
     assert!(ans == tmp.iter().map(|i| count_ones_inplace_1(*i) as usize).sum());
     assert!(ans == tmp.iter().map(|i| count_ones_inplace_2(*i) as usize).sum());
     assert!(ans == tmp.iter().map(|i| count_ones_inplace_3(*i) as usize).sum());
