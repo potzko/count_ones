@@ -1,6 +1,6 @@
 use lazy_static::lazy_static;
 use rand::Rng;
-use std::{hint::black_box, time::Instant};
+use std::{hint::black_box, io::Bytes, time::Instant};
 
 //if you try to run with with a u64, you will crash, better avoid...
 type NumType = u32;
@@ -125,11 +125,18 @@ fn count_ones_memo_small(num: u8) -> u8 {
 
 fn count_ones_memo_1(num: NumType) -> u8 {
     //break the number to sections of size 8, then sum them to avoid having the huge array
-    let mut ret = 0;
-    for i in (0..DIGIT_COUNT).step_by(8) {
-        ret += count_ones_memo_small(((num & (255 << i)) >> i) as u8)
-    }
-    ret
+    num.to_ne_bytes().iter().map(|i| count_ones_memo_small(*i)).sum()
+}
+
+fn count_ones_memo_2(num: NumType) -> u8 {
+    //note, numtype can only be up to u64
+    //count_ones_memo_1 with some nice unrolling, might be faster?
+    let num = (num as u64).to_ne_bytes();
+    let a = count_ones_memo_small(num[0]) + count_ones_memo_small(num[1]);
+    let b = count_ones_memo_small(num[2]) + count_ones_memo_small(num[3]);
+    let c = count_ones_memo_small(num[4]) + count_ones_memo_small(num[5]);
+    let d = count_ones_memo_small(num[6]) + count_ones_memo_small(num[7]);
+    a + b + c + d
 }
 
 fn measure_execution_time<F, NumType>(nums: &[NumType], count_fn: F) -> std::time::Duration
@@ -153,6 +160,7 @@ fn run_vec(nums: &[NumType]) {
     let time_count_inplace_4 = measure_execution_time(nums, count_ones_inplace_4);
     let time_count_memo = measure_execution_time(nums, count_ones_memo_0);
     let time_count_memo_1 = measure_execution_time(nums, count_ones_memo_1);
+    let time_count_memo_2 = measure_execution_time(nums, count_ones_memo_2);
     let time_inbuilt = measure_execution_time(nums, inbuilt_count_ones);
 
     println!("Count Methods Execution Times:");
@@ -164,6 +172,7 @@ fn run_vec(nums: &[NumType]) {
     println!("  Inplace 4:              {:?}", time_count_inplace_4);
     println!("  Memoization:            {:?}", time_count_memo);
     println!("  Memoization 1:          {:?}", time_count_memo_1);
+    println!("  Memoization 2:          {:?}", time_count_memo_2);
     println!("  Inbuilt Function:       {:?}", time_inbuilt);
 }
 
@@ -233,6 +242,7 @@ fn main() {
 
     assert!(ans == tmp.iter().map(|i| count_ones_memo_0(*i) as usize).sum());
     assert!(ans == tmp.iter().map(|i| count_ones_memo_1(*i) as usize).sum());
+    assert!(ans == tmp.iter().map(|i| count_ones_memo_2(*i) as usize).sum());
 
 
     let arr: Vec<NumType> = get_rand_arr(VEC_SIZE);
