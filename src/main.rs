@@ -63,6 +63,7 @@ fn count_ones_inplace_0(num: NumType) -> u8 {
 
 fn count_ones_inplace_1(num: NumType) -> u8 {
     //my first thought, with added check for early return
+    //should be slower because of the branch
     let mut ret: u8 = 0;
     for i in 0..DIGIT_COUNT {
         ret += ((num & (1 << i)) >> i) as u8;
@@ -74,7 +75,8 @@ fn count_ones_inplace_1(num: NumType) -> u8 {
 }
 
 fn count_ones_inplace_2(num: NumType) -> u8 {
-    //small trick, num &= num - 1 will always remove the first 1
+    //small trick, num &= num - 1 will always remove the first one in the number
+    //we do this as many times as there are ones
     let mut num = num;
     let mut ret: u8 = 0;
     while num != 0 {
@@ -84,11 +86,10 @@ fn count_ones_inplace_2(num: NumType) -> u8 {
     ret
 }
 
-//https://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetKernighan
+//implemented based on the version on https://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetKernighan
 fn count_ones_inplace_3(num: NumType) -> u8 {
     //note, numtype can only be up to u32
-    //set ones in num = set ones in left half of num + set ones in right half of num
-    //we calculate those at the same time using instruction over the whole number rather then just checking one bit at a time
+    //literal dark magic voodoo code
     let num = num as u64;
     let mut ret = (((num & 0xfff) * 0x1001001001001_u64) & 0x84210842108421_u64) % 0x1f;
     ret += ((((num & 0xfff000) >> 12) * 0x1001001001001_u64) & 0x84210842108421_u64) % 0x1f;
@@ -96,6 +97,7 @@ fn count_ones_inplace_3(num: NumType) -> u8 {
     ret as u8
 }
 
+//implemented based on the version on https://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetKernighan
 fn count_ones_inplace_4(num: NumType) -> u8 {
     let num = num as u64;
     //note, numtype can only be up to u32
@@ -129,8 +131,6 @@ fn count_ones_memo_1(num: NumType) -> u8 {
     }
     ret
 }
-
-//https://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetKernighan
 
 fn measure_execution_time<F, NumType>(nums: &[NumType], count_fn: F) -> std::time::Duration
 where
