@@ -6,6 +6,25 @@ use std::{hint::black_box, time::Instant};
 type NumType = u32;
 const VEC_SIZE: usize = 100000000;
 const DIGIT_COUNT: usize = NumType::MAX.count_ones() as usize;
+//the small arr is very small so we can let the compiler know to use it as a const
+const ARR_SMALL: [u8; 1 << 8] = {
+    let mut arr = [0; 1 << (8)];
+    let mut next_pow = 2;
+    arr[0] = 0;
+    arr[1] = 1;
+    let mut step = 7;
+    while step > 0 {
+        step -= 1;
+        
+        let mut i = next_pow;
+        while i < (next_pow << 1) {
+            arr[i] = 1 + arr[i - next_pow];
+            i += 1;
+        }
+        next_pow <<= 1;
+    }
+    arr
+};
 
 pub fn get_rand_arr(length: usize) -> Vec<NumType> {
     //returns an array of length N filled with random numbers
@@ -167,7 +186,11 @@ lazy_static! {
         println!("finished init, {:?}", start.elapsed());
         arr
     };
-    static ref ARR_SMALL: [u8; 1 << 8] = {
+}
+
+//this is the same array as the const one, we just messure the time to create it in here.
+fn mesure_time_to_create_small_arr() -> [u8; 1 << 8] {
+    let arr: [u8; 1 << 8] = {
         println!("started init small");
         let start = Instant::now();
         let mut arr = [0; 1 << (8)];
@@ -183,6 +206,7 @@ lazy_static! {
         println!("finished init small, {:?}", start.elapsed());
         arr
     };
+    arr
 }
 
 fn main() {
@@ -207,6 +231,8 @@ fn main() {
 
     assert!(ans == tmp.iter().map(|i| count_ones_memo_0(*i) as usize).sum());
     assert!(ans == tmp.iter().map(|i| count_ones_memo_1(*i) as usize).sum());
+
+    mesure_time_to_create_small_arr();
 
     let arr: Vec<NumType> = get_rand_arr(VEC_SIZE);
     println!("finished array gen");
