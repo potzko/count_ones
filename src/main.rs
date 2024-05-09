@@ -1,6 +1,6 @@
 use lazy_static::lazy_static;
 use rand::Rng;
-use std::{hint::black_box, io::Bytes, time::Instant};
+use std::{hint::black_box, time::Instant};
 
 //if you try to run with with a u64, you will crash, better avoid...
 type NumType = u32;
@@ -26,7 +26,7 @@ const ARR_SMALL: [u8; 1 << 8] = {
     let mut step = 7;
     while step > 0 {
         step -= 1;
-        
+
         let mut i = next_pow;
         while i < (next_pow << 1) {
             arr[i] = 1 + arr[i - next_pow];
@@ -112,7 +112,6 @@ fn count_ones_inplace_4(num: NumType) -> u8 {
     ret as u8
 }
 
-
 fn count_ones_memo_0(num: NumType) -> u8 {
     //array the size of the whole number type
     ARR[num as usize]
@@ -125,7 +124,10 @@ fn count_ones_memo_small(num: u8) -> u8 {
 
 fn count_ones_memo_1(num: NumType) -> u8 {
     //break the number to sections of size 8, then sum them to avoid having the huge array
-    num.to_ne_bytes().iter().map(|i| count_ones_memo_small(*i)).sum()
+    num.to_ne_bytes()
+        .iter()
+        .map(|i| count_ones_memo_small(*i))
+        .sum()
 }
 
 fn count_ones_memo_2(num: NumType) -> u8 {
@@ -178,9 +180,7 @@ fn run_vec(nums: &[NumType]) {
 
 lazy_static! {
     //init lookup arrays, the arrays[i] = amount_of_set_bits(i)
-
     //ARR can be large (around 4 billion for u32 for example) so we save it to the heap
-    //
     static ref ARR: Vec<u8> = {
         println!("started init");
         let start = Instant::now();
@@ -200,28 +200,39 @@ lazy_static! {
 }
 
 //this is the same array as the const one, we just messure the time to create it in here.
-fn mesure_time_to_create_small_arr() -> [u8; 1 << 8] {
-    let arr: [u8; 1 << 8] = {
-        println!("started init small");
-        let start = Instant::now();
-        let mut arr = [0; 1 << (8)];
-        let mut next_pow = 2;
-        arr[0] = 0;
-        arr[1] = 1;
-        for _ in 0..8 - 1 {
-            for i in next_pow..next_pow << 1 {
-                arr[i] = 1 + arr[i - next_pow];
-            }
-            next_pow <<= 1;
+fn mesure_time_to_create_mine() -> Vec<u8> {
+    let mut arr = vec![0; 1 << (DIGIT_COUNT)];
+    println!("started init");
+    let start = Instant::now();
+    let mut next_pow = 2;
+    arr[0] = 0;
+    arr[1] = 1;
+    for _ in 0..DIGIT_COUNT - 1 {
+        for i in next_pow..next_pow << 1 {
+            arr[i] = 1 + arr[i - next_pow];
         }
-        println!("finished init small, {:?}", start.elapsed());
-        arr
-    };
+        next_pow <<= 1;
+    }
+    println!("finished init, {:?}", start.elapsed());
+    arr
+}
+
+fn mesure_time_to_create_map_inbuilt() -> Vec<u8> {
+    let mut arr: Vec<u8> = vec![0; 1 << (DIGIT_COUNT)];
+    println!("started init");
+    let start = Instant::now();
+    for i in 0..arr.len() {
+        arr[i] = (i as NumType).count_ones() as u8;
+    }
+    println!("finished init, {:?}", start.elapsed());
     arr
 }
 
 fn main() {
-    mesure_time_to_create_small_arr();
+    println!("started checking mine");
+    black_box(mesure_time_to_create_mine());
+    println!("started checking std");
+    black_box(mesure_time_to_create_map_inbuilt());
 
     let tmp = get_rand_arr(100);
     let ans = tmp
@@ -234,7 +245,12 @@ fn main() {
             .map(|i| count_ones_inplace_naive(*i) as usize)
             .sum()
     );
-    assert!(ans == tmp.iter().map(|i| count_ones_inplace_naive(*i) as usize).sum());
+    assert!(
+        ans == tmp
+            .iter()
+            .map(|i| count_ones_inplace_naive(*i) as usize)
+            .sum()
+    );
     assert!(ans == tmp.iter().map(|i| count_ones_inplace_1(*i) as usize).sum());
     assert!(ans == tmp.iter().map(|i| count_ones_inplace_2(*i) as usize).sum());
     assert!(ans == tmp.iter().map(|i| count_ones_inplace_3(*i) as usize).sum());
@@ -243,7 +259,6 @@ fn main() {
     assert!(ans == tmp.iter().map(|i| count_ones_memo_0(*i) as usize).sum());
     assert!(ans == tmp.iter().map(|i| count_ones_memo_1(*i) as usize).sum());
     assert!(ans == tmp.iter().map(|i| count_ones_memo_2(*i) as usize).sum());
-
 
     let arr: Vec<NumType> = get_rand_arr(VEC_SIZE);
     println!("finished array gen");
