@@ -10,8 +10,5 @@ edition = "2021"
 lazy_static = "1.4.0"
 rand = "0.8.5"
 
-[build]
-rustflags = ["-C target-cpu=native"]
-
 [profile.dev]
 opt-level = 3
