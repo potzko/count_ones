@@ -210,7 +210,7 @@ fn mesure_time_to_create_small_arr() -> [u8; 1 << 8] {
 }
 
 fn main() {
-    std::env::set_var("RUSTFLAGS", "-C virtual-memory-max=8192 -C stack-size=65536");
+    mesure_time_to_create_small_arr();
 
     let tmp = get_rand_arr(100);
     let ans = tmp
@@ -232,7 +232,6 @@ fn main() {
     assert!(ans == tmp.iter().map(|i| count_ones_memo_0(*i) as usize).sum());
     assert!(ans == tmp.iter().map(|i| count_ones_memo_1(*i) as usize).sum());
 
-    mesure_time_to_create_small_arr();
 
     let arr: Vec<NumType> = get_rand_arr(VEC_SIZE);
     println!("finished array gen");
