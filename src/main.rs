@@ -12,7 +12,7 @@ fn get_rand_arr(length: usize) -> Vec<NumType> {
     let mut rng = rand::thread_rng();
     let mut vec = Vec::with_capacity(length);
     for _ in 0..length {
-        vec.push(rng.gen::<NumType>() as NumType);
+        vec.push(rng.gen::<NumType>());
     }
     vec
 }
