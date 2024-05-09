@@ -6,6 +6,17 @@ use std::{hint::black_box, time::Instant};
 type NumType = u32;
 const VEC_SIZE: usize = 100000000;
 const DIGIT_COUNT: usize = NumType::MAX.count_ones() as usize;
+
+fn get_rand_arr(length: usize) -> Vec<NumType> {
+    //returns an array of length N filled with random numbers
+    let mut rng = rand::thread_rng();
+    let mut vec = Vec::with_capacity(length);
+    for _ in 0..length {
+        vec.push(rng.gen::<NumType>() as NumType);
+    }
+    vec
+}
+
 //the small arr is very small so we can let the compiler know to use it as a const
 const ARR_SMALL: [u8; 1 << 8] = {
     let mut arr = [0; 1 << (8)];
@@ -26,15 +37,6 @@ const ARR_SMALL: [u8; 1 << 8] = {
     arr
 };
 
-pub fn get_rand_arr(length: usize) -> Vec<NumType> {
-    //returns an array of length N filled with random numbers
-    let mut rng = rand::thread_rng();
-    let mut vec = Vec::with_capacity(length);
-    for _ in 0..length {
-        vec.push(rng.gen::<NumType>() as NumType);
-    }
-    vec
-}
 fn inbuilt_count_ones(num: NumType) -> u8 {
     num.count_ones() as u8
 }
